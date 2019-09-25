@@ -1,4 +1,3 @@
-import {FlowerData} from '/local/lovelace-flower-card/data/data.js';
 customElements.whenDefined('card-tools').then(() => {
 class FlowerCard extends cardTools.LitElement {
 
@@ -21,13 +20,14 @@ class FlowerCard extends cardTools.LitElement {
     .attribute ha-icon {
       float: left;
       margin-right: 4px;
+      height: 80%;
+      width: 16px;
     }
     .attribute {
       display: inline-block;
       width: 50%;
       white-space: normal;
     }
-
     .header {
       padding-top: 8px;
       height: 72px;
@@ -88,37 +88,36 @@ class FlowerCard extends cardTools.LitElement {
   }
 
   render() {
-    const species = this.config.species;
-    const Flower = FlowerData[species];
     if(!this.stateObj)
       return cardTools.LitHtml``;
+    const r = this.stateObj.attributes.readings;
 
-    const attribute = (icon, val, min, max) => {
-      const pct = 100*Math.max(0, Math.min(1, (val-min)/(max-min)));
+    const attribute = (icon, a) => {
+      const pct = 100*Math.max(0, Math.min(1, (a.state-a.minimum)/(a.maximum-a.minimum)));
       return cardTools.LitHtml`
         <div class="attribute">
           <ha-icon .icon="${icon}"></ha-icon>
           <div class="meter red">
             <span
-            class="${val < min || val > max ? 'bad' : 'good'}"
+            class="${a.state < a.minimum || a.state > a.maximum ? 'bad' : 'good'}"
             style="width: 100%;"
             ></span>
           </div>
           <div class="meter green">
             <span
-            class="${val > max ? 'bad' : 'good'}"
+            class="${a.state > a.maximum ? 'bad' : 'good'}"
             style="width:${pct}%;"
             ></span>
           </div>
           <div class="meter red">
             <span
             class="bad"
-            style="width:${val > max ? 100 : 0}%;"
+            style="width:${a.state > a.maximum ? 100 : 0}%;"
             ></span>
           </div>
         </div>
       `;
-          // ${val} (${min}-${max})
+          // ${a.state} (${a.minimum}-${a.maximum})
     }
 
     return cardTools.LitHtml`
@@ -126,23 +125,28 @@ class FlowerCard extends cardTools.LitElement {
     <div class="header"
     @click="${() => cardTools.moreInfo(this.stateObj.entity_id)}"
     >
-    <img src="/local/lovelace-flower-card/data/Images/${this.config.species}.jpg">
-    <span id="name"> ${this.stateObj.attributes.friendly_name} - ${Flower[1]}</span>
-    <span id="species"> ${Flower[0]} </span>
+    <img src="${this.stateObj.attributes.entity_picture}">
+    <span id="name"> ${this.stateObj.attributes.friendly_name}</span>
+    <span id="species"> ${this.stateObj.attributes.display_pid} </span>
     </div>
     <div class="divider"></div>
 
     <div class="attributes">
-    ${attribute('mdi:thermometer', this.stateObj.attributes.temperature, Flower[4], Flower[5])}
-    ${attribute('mdi:white-balance-sunny', this.stateObj.attributes.brightness, Flower[2], Flower[3])}
+    ${attribute('mdi:thermometer', r.temp)}
+    ${attribute('mdi:water-percent', r.env_humid)}
     </div>
     <div class="attributes">
-    ${attribute('mdi:water-percent', this.stateObj.attributes.moisture, Flower[6], Flower[7])}
-    ${attribute('mdi:leaf', this.stateObj.attributes.conductivity, Flower[8], Flower[9])}
+    
+    ${attribute('mdi:brightness-6', r.light_lux)}
+    </div>
+    <div class="attributes">
+    ${attribute('mdi:water-pump', r.soil_moist)}
+    ${attribute('mdi:leaf', r.soil_ec)}
     </div>
 
     </ha-card>
     `;
+    // ${attribute('mdi:white-balance-sunny', r.light_mmol)}
   }
 
   set hass(hass) {
