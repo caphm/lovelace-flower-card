@@ -20,8 +20,6 @@ class FlowerCard extends cardTools.LitElement {
     .attribute ha-icon {
       float: left;
       margin-right: 4px;
-      height: 80%;
-      width: 16px;
     }
     .attribute {
       display: inline-block;
@@ -92,27 +90,28 @@ class FlowerCard extends cardTools.LitElement {
       return cardTools.LitHtml``;
     const r = this.stateObj.attributes.readings;
 
-    const attribute = (icon, a) => {
-      const pct = 100*Math.max(0, Math.min(1, (a.state-a.minimum)/(a.maximum-a.minimum)));
+    const attribute = (icon, a, overrideState) => {
+      const state = typeof overrideState !== 'undefined' ? overrideState : a.state;
+      const pct = 100*Math.max(0, Math.min(1, (state-a.minimum)/(a.maximum-a.minimum)));
       return cardTools.LitHtml`
         <div class="attribute">
           <ha-icon .icon="${icon}"></ha-icon>
           <div class="meter red">
             <span
-            class="${a.state < a.minimum || a.state > a.maximum ? 'bad' : 'good'}"
+            class="${state < a.minimum || state > a.maximum ? 'bad' : 'good'}"
             style="width: 100%;"
             ></span>
           </div>
           <div class="meter green">
             <span
-            class="${a.state > a.maximum ? 'bad' : 'good'}"
+            class="${state > a.maximum ? 'bad' : 'good'}"
             style="width:${pct}%;"
             ></span>
           </div>
           <div class="meter red">
             <span
             class="bad"
-            style="width:${a.state > a.maximum ? 100 : 0}%;"
+            style="width:${state > a.maximum ? 100 : 0}%;"
             ></span>
           </div>
         </div>
@@ -132,16 +131,13 @@ class FlowerCard extends cardTools.LitElement {
     <div class="divider"></div>
 
     <div class="attributes">
-    ${attribute('mdi:thermometer', r.temp)}
-    ${attribute('mdi:water-percent', r.env_humid)}
-    </div>
-    <div class="attributes">
-    
-    ${attribute('mdi:brightness-6', r.light_lux)}
-    </div>
-    <div class="attributes">
     ${attribute('mdi:water-pump', r.soil_moist)}
     ${attribute('mdi:leaf', r.soil_ec)}
+    </div>
+
+    <div class="attributes">
+    ${attribute('mdi:thermometer', r.temp)}
+    ${attribute('mdi:white-balance-sunny', r.light_lux, this.stateObj.attributes.max_brightness)}
     </div>
 
     </ha-card>
